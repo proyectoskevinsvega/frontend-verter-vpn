@@ -35,9 +35,9 @@ sudo chmod -R 775 /var/www/verter-vpn
 
 # Clonar e instalar
 cd /var/www/verter-vpn
-git clone https://github.com/proyectoskevinsvega/dashboard-vpn.git .
-npm install
-npm run build
+git clone https://github.com/proyectoskevinsvega/frontend-verter-vpn.git .
+bun install
+bun run build
 ```
 
 O si ya tienes el repositorio, simplemente aplica los permisos al directorio actual:
