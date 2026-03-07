@@ -20,9 +20,9 @@ jobs:
             REPO_DIR="/var/www/verter-vpn/source"
             REPO_URL="https://github.com/proyectoskevinsvega/frontend-verter-vpn.git"
 
-            # Clone si no existe, pull si ya existe
             if [ -d "$REPO_DIR/.git" ]; then
               echo "→ Repo exists, pulling latest..."
+              git -C "$REPO_DIR" reset --hard
               git -C "$REPO_DIR" pull origin main
             else
               echo "→ Cloning for the first time..."
@@ -30,7 +30,6 @@ jobs:
               git clone "$REPO_URL" "$REPO_DIR"
             fi
 
-            # Ejecutar el script de deploy desde el source
             cd "$REPO_DIR"
             chmod +x deploy-verter-vpn.sh
             ./deploy-verter-vpn.sh

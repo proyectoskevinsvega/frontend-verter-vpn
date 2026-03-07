@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Deployment script for verter-vpn (frontend)
-# SaaS-Level: Zero-Downtime, Isolated Builds, Centralized Logging
+export BUN_INSTALL="/root/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 set -euo pipefail
 
