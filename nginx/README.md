@@ -143,29 +143,29 @@ Se copia a `/etc/nginx/conf.d/`. Se aplica a **todos** los virtual hosts con SSL
 
 ## Instalación en el VPS
 
-> Ejecutar desde el directorio del repositorio clonado en el VPS: `/var/www/verter-vpn/source`
+Los archivos de configuración ya están listos en `frontend/nginx/`. El proceso es: abrir cada archivo en el repo → copiar su contenido → pegarlo en el VPS con `nano`.
 
 ```bash
 # ── 1. Crear estructura de directorios ───────────────────────────────────────
-sudo mkdir -p /var/www/verter-vpn/{source,releases,errors}
+sudo mkdir -p /var/www/verter-vpn/{releases,errors}
 sudo mkdir -p /etc/nginx/{conf.d,ssl}
 sudo chown -R $USER:$USER /var/www/verter-vpn
 
-# ── 2. Copiar configuración principal de Nginx ───────────────────────────────
-sudo cp /var/www/verter-vpn/source/nginx/etc/nginx/nginx.conf \
-        /etc/nginx/nginx.conf
+# ── 2. Pegar configuración principal de Nginx ────────────────────────────────
+# Contenido: nginx/etc/nginx/nginx.conf del repositorio
+sudo nano /etc/nginx/nginx.conf
 
-# ── 3. Copiar TLS compartido (ssl.conf) ─────────────────────────────────────
-sudo cp /var/www/verter-vpn/source/nginx/etc/nginx/conf.d/ssl.conf \
-        /etc/nginx/conf.d/ssl.conf
+# ── 3. Pegar TLS compartido ──────────────────────────────────────────────────
+# Contenido: nginx/etc/nginx/conf.d/ssl.conf del repositorio
+sudo nano /etc/nginx/conf.d/ssl.conf
 
-# ── 4. Copiar headers de seguridad globales ──────────────────────────────────
-sudo cp /var/www/verter-vpn/source/nginx/etc/nginx/conf.d/security.conf \
-        /etc/nginx/conf.d/security.conf
+# ── 4. Pegar headers de seguridad globales ───────────────────────────────────
+# Contenido: nginx/etc/nginx/conf.d/security.conf del repositorio
+sudo nano /etc/nginx/conf.d/security.conf
 
-# ── 5. Copiar y activar el virtual host ─────────────────────────────────────
-sudo cp /var/www/verter-vpn/source/nginx/nginx.conf \
-        /etc/nginx/sites-available/verter-vpn.conf
+# ── 5. Crear y activar el virtual host ──────────────────────────────────────
+# Contenido: nginx/nginx.conf del repositorio
+sudo nano /etc/nginx/sites-available/verter-vpn.conf
 
 sudo ln -sfn /etc/nginx/sites-available/verter-vpn.conf \
              /etc/nginx/sites-enabled/verter-vpn.conf
@@ -173,20 +173,21 @@ sudo ln -sfn /etc/nginx/sites-available/verter-vpn.conf \
 # ── 6. Eliminar el default de Nginx si existe ────────────────────────────────
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# ── 7. Copiar certificados Cloudflare Origin (si no están ya) ───────────────
-# sudo cp cloudflare-origin.crt /etc/nginx/ssl/cloudflare-origin.crt
-# sudo cp cloudflare-origin.key /etc/nginx/ssl/cloudflare-origin.key
-# sudo chmod 600 /etc/nginx/ssl/cloudflare-origin.key
+# ── 7. Certificados Cloudflare Origin ───────────────────────────────────────
+# Pegar el contenido del certificado y la clave desde Cloudflare Dashboard
+sudo nano /etc/nginx/ssl/cloudflare-origin.crt
+sudo nano /etc/nginx/ssl/cloudflare-origin.key
+sudo chmod 600 /etc/nginx/ssl/cloudflare-origin.key
 
 # ── 8. Crear páginas de error personalizadas ─────────────────────────────────
-sudo mkdir -p /var/www/verter-vpn/errors
 echo '<html><body><h1>429 Too Many Requests</h1></body></html>' | \
     sudo tee /var/www/verter-vpn/errors/429.html > /dev/null
 echo '<html><body><h1>500 Internal Server Error</h1></body></html>' | \
     sudo tee /var/www/verter-vpn/errors/50x.html > /dev/null
 
 # ── 9. Aplicar kernel tuning (sysctl) ───────────────────────────────────────
-sudo cp /var/www/verter-vpn/source/nginx/etc/sysctl.conf /etc/sysctl.conf
+# Contenido: nginx/etc/sysctl.conf del repositorio
+sudo nano /etc/sysctl.conf
 sudo sysctl -p
 
 # ── 10. Verificar configuración y recargar ───────────────────────────────────
