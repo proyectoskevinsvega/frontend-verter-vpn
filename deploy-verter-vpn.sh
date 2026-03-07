@@ -15,18 +15,28 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 NEW_RELEASE_DIR="$RELEASES_DIR/$TIMESTAMP"
 KEEP_RELEASES=5
 
+# Capture previous release BEFORE any changes (used for automatic rollback)
+PREVIOUS_RELEASE=$(readlink -f "$CURRENT_DIR" 2>/dev/null || echo "")
+
 # Logging function
 log() {
     local message=$1
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $message" | tee -a "$LOG_FILE"
 }
 
-# Error handler
+# Error handler — automatic rollback to previous release
 on_error() {
-    log "❌ ERROR: Deployment failed at step: $1"
+    log "❌ ERROR: Deployment failed at line $1"
+    if [ -n "$PREVIOUS_RELEASE" ] && [ -d "$PREVIOUS_RELEASE" ]; then
+        log "⏪ Rolling back to: $PREVIOUS_RELEASE"
+        ln -sfn "$PREVIOUS_RELEASE" "$CURRENT_DIR"
+        sudo systemctl reload nginx && log "✅ Nginx reloaded — previous release restored"
+    else
+        log "⚠️  No previous release found — manual intervention required"
+    fi
     exit 1
 }
-trap 'on_error "Line $LINENO"' ERR
+trap 'on_error "$LINENO"' ERR
 
 log "-------------------------------------------"
 log "🚀 Starting deployment for $PROJECT_NAME..."
