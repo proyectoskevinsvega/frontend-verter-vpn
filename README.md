@@ -47,16 +47,37 @@ git push origin main
 GitHub Actions se encarga del resto:
 
 ```
-git push → GitHub Actions → SSH al VPS → git pull → build → switch atómico → nginx reload
+git push
+  → Build en GitHub runner (gratis)
+  → gzip -9 de todos los assets
+  → scp dist/ → VPS /releases/SHA_COMMIT
+  → ln -sfn releases/SHA current   ← switch atómico
+  → nginx reload + health check
+  → rollback automático si HTTP ≠ 200
 ```
 
-Cada deploy crea un build aislado en `/var/www/verter-vpn/releases/TIMESTAMP/`.
-Nginx siempre sirve desde el symlink `/var/www/verter-vpn/current/dist` — cero downtime.
+Cada deploy crea un release en `/var/www/verter-vpn/releases/SHA_COMMIT/`.
+Nginx sirve desde el symlink `/var/www/verter-vpn/current` — **cero downtime**.
 
 Para más detalles del pipeline:
 
 - 📄 [`doc/README_DEPLOY.md`](doc/README_DEPLOY.md) — flujo completo, rollback y logs
 - 📄 [`nginx/README.md`](nginx/README.md) — configuración Nginx del VPS
+
+### ⚡ Code Splitting
+
+El bundle está dividido en chunks independientes para caché óptimo del browser:
+
+| Chunk           | Contenido                      | Tamaño gzip |
+| --------------- | ------------------------------ | ----------- |
+| `vendor-react`  | react + react-dom              | ~45 KB      |
+| `vendor-motion` | framer-motion                  | ~55 KB      |
+| `vendor-icons`  | lucide-react                   | ~25 KB      |
+| `vendor-router` | react-router-dom               | ~12 KB      |
+| `vendor-ui`     | clsx + tailwind-merge + sonner | ~5 KB       |
+| `index`         | Tu código de app               | ~78 KB      |
+
+Después de un deploy, el browser solo descarga el chunk `index` si cambias código de la app — los vendor chunks se sirven desde caché (1 año).
 
 ### Setup inicial (solo la primera vez)
 
@@ -85,10 +106,10 @@ chmod 600 ~/.ssh/authorized_keys
 
 ```bash
 # Crear estructura de directorios
-sudo mkdir -p /var/www/verter-vpn/{source,releases,errors}
+sudo mkdir -p /var/www/verter-vpn/{releases,errors}
 sudo chown -R $USER:$USER /var/www/verter-vpn
 
-# Permitir recargar Nginx sin contraseña (requerido por el deploy script)
+# Permitir recargar Nginx sin contraseña (requerido por el workflow)
 echo "$USER ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx" | sudo tee /etc/sudoers.d/nginx-reload
 ```
 
@@ -105,8 +126,12 @@ echo "$USER ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx" | sudo tee /etc/sud
 ## 🔄 Rollback instantáneo
 
 ```bash
-ln -sfn /var/www/verter-vpn/releases/[TIMESTAMP] /var/www/verter-vpn/current
+# Por SHA (el workflow identifica releases por SHA del commit)
+ln -sfn /var/www/verter-vpn/releases/[SHA_COMMIT] /var/www/verter-vpn/current
 sudo systemctl reload nginx
+
+# Ver releases disponibles
+ls -dt /var/www/verter-vpn/releases/*
 ```
 
 ---
