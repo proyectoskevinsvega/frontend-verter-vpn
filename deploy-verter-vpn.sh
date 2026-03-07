@@ -32,6 +32,16 @@ log "-------------------------------------------"
 log "🚀 Starting deployment for $PROJECT_NAME..."
 log "📅 Release: $TIMESTAMP"
 
+# Ensure Bun is available — install if missing
+if ! command -v bun &> /dev/null; then
+    log "⚡ Bun not found. Installing Bun..."
+    curl -fsSL https://bun.sh/install | bash
+    # Load Bun into PATH for this session
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+    log "✅ Bun installed: $(bun --version)"
+fi
+
 # 1. Create structure if not exists
 mkdir -p "$RELEASES_DIR"
 touch "$LOG_FILE"
