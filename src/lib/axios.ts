@@ -63,8 +63,8 @@ api.interceptors.request.use(
 
       // Auto-inyección Multi-Inquilino (SaaS B2B)
       // Agrega el ID de la Empresa automáticamente a todos los payloads JSON
-      if (config.data && typeof config.data === 'object') {
-        config.data.tenant_id = import.meta.env.VITE_TENANT_SLUG || 'default';
+      if (config.data && typeof config.data === 'object' && !config.data.tenant_id) {
+        config.data.tenant_id = import.meta.env.VITE_TENANT_SLUG || 'vertercloud';
       }
     }
     return config;
@@ -72,7 +72,21 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 Unauthorized (Token refresh logic could be added here if needed, but the backend handles HTTP-only cookies, so usually a 401 just means session expired)
+let isRefreshing = false;
+let failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: any) => void }[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token as any);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response Interceptor: Handle 401 Unauthorized with Token Refresh Queueing
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -80,16 +94,42 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Optional: If backend supports a /auth/refresh endpoint via cookie, we can attempt a transparent retry here.
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && !originalRequest.url?.includes('/auth/refresh')) {
+    // Handle 401 errors, but exclude login and the refresh request itself to avoid loops
+    if (
+      error.response?.status === 401 && 
+      !originalRequest._retry && 
+      originalRequest.url !== '/auth/login' && 
+      !originalRequest.url?.includes('/auth/refresh')
+    ) {
+      if (isRefreshing) {
+        // If already refreshing, add this request to the queue
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
+        // Attempt to refresh the token. The request interceptor will inject tenant_id.
         await api.post('/auth/refresh', {});
-        // Retry the original request after successful refresh
+        
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, let the error propagate (AuthContext will likely catch this and log out)
+        processQueue(refreshError);
+        // Clear CSRF on hard auth failure
+        csrfToken = null;
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
@@ -101,3 +141,4 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
