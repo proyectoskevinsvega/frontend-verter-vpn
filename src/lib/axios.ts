@@ -84,7 +84,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login') {
       originalRequest._retry = true;
       try {
-        await api.post('/auth/refresh');
+        await api.post('/auth/refresh', {});
         // Retry the original request after successful refresh
         return api(originalRequest);
       } catch (refreshError) {
