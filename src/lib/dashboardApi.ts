@@ -34,7 +34,7 @@ export const subscriptionService = {
    */
   async getSummary(): Promise<SubscriptionSummary | null> {
     try {
-      const response = await api.get('/subscriptions/me/summary');
+      const response = await api.get('/vpn/subscriptions/me/summary');
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -50,7 +50,7 @@ export const subscriptionService = {
    */
   async getMyPlan(): Promise<Plan | null> {
     try {
-      const response = await api.get('/subscriptions/me/plan');
+      const response = await api.get('/vpn/subscriptions/me/plan');
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {

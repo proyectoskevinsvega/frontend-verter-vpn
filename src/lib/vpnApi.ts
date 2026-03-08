@@ -8,7 +8,7 @@ export const vpnService = {
    */
   async getServers(): Promise<Server[]> {
     try {
-      const response = await api.get('/me/servers');
+      const response = await api.get('/vpn/me/servers');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching servers:", error);
@@ -21,7 +21,7 @@ export const vpnService = {
    */
   async getServerById(serverId: string): Promise<Server> {
     try {
-      const response = await api.get(`/servers/${serverId}`);
+      const response = await api.get(`/vpn/servers/${serverId}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching server details:", error);
@@ -35,7 +35,7 @@ export const vpnService = {
    */
   async getDevices(): Promise<VpnDevice[]> {
     try {
-      const response = await api.get('/me/devices');
+      const response = await api.get('/vpn/me/devices');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -48,7 +48,7 @@ export const vpnService = {
    */
   async createDevice(data: DeviceCreateRequest): Promise<VpnDevice> {
     try {
-      const response = await api.post('/me/devices', data);
+      const response = await api.post('/vpn/me/devices', data);
       return response.data;
     } catch (error) {
       console.error("Error creating device:", error);
@@ -61,7 +61,7 @@ export const vpnService = {
    */
   async deleteDevice(deviceId: string): Promise<void> {
     try {
-      await api.delete(`/me/devices/${deviceId}`);
+      await api.delete(`/vpn/me/devices/${deviceId}`);
     } catch (error) {
       console.error("Error deleting device:", error);
       throw error;
@@ -73,7 +73,7 @@ export const vpnService = {
    */
   async connectDevice(deviceId: string, serverId: string): Promise<void> {
     try {
-      await api.post(`/me/devices/${deviceId}/connect`, { server_id: serverId });
+      await api.post(`/vpn/me/devices/${deviceId}/connect`, { server_id: serverId });
     } catch (error) {
       console.error("Error connecting device to server:", error);
       throw error;
@@ -85,7 +85,7 @@ export const vpnService = {
    */
   async disconnectDevice(deviceId: string): Promise<void> {
     try {
-      await api.delete(`/me/devices/${deviceId}/disconnect`);
+      await api.delete(`/vpn/me/devices/${deviceId}/disconnect`);
     } catch (error) {
       console.error("Error disconnecting device:", error);
       throw error;
@@ -97,7 +97,7 @@ export const vpnService = {
    */
   async getDeviceQrCode(deviceId: string): Promise<QrResponseData> {
     try {
-      const response = await api.get<ApiResponse<QrResponseData>>(`/me/devices/${deviceId}/qr`);
+      const response = await api.get<ApiResponse<QrResponseData>>(`/vpn/me/devices/${deviceId}/qr`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching QR code:", error);
@@ -110,7 +110,7 @@ export const vpnService = {
    */
   async downloadDeviceConfig(deviceId: string, suggestedName: string): Promise<void> {
     try {
-      const response = await api.get(`/me/devices/${deviceId}/download`, {
+      const response = await api.get(`/vpn/me/devices/${deviceId}/download`, {
         responseType: 'blob', // Importantísimo para archivos binarios
       });
       
@@ -134,7 +134,7 @@ export const vpnService = {
    */
   async getDeviceSecurity(deviceId: string): Promise<DeviceSecurity> {
     try {
-      const response = await api.get<ApiResponse<DeviceSecurity>>(`/me/devices/${deviceId}/security`);
+      const response = await api.get<ApiResponse<DeviceSecurity>>(`/vpn/me/devices/${deviceId}/security`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching device security:", error);
@@ -147,7 +147,7 @@ export const vpnService = {
    */
   async updateDeviceSecurity(deviceId: string, data: DeviceSecurity): Promise<void> {
     try {
-      await api.put(`/me/devices/${deviceId}/security`, data);
+      await api.put(`/vpn/me/devices/${deviceId}/security`, data);
     } catch (error) {
       console.error("Error updating device security:", error);
       throw error;
@@ -160,7 +160,7 @@ export const vpnService = {
    */
   async getDeviceStats(deviceId: string): Promise<DeviceStats> {
     try {
-      const response = await api.get<ApiResponse<DeviceStats>>(`/me/devices/${deviceId}/stats`);
+      const response = await api.get<ApiResponse<DeviceStats>>(`/vpn/me/devices/${deviceId}/stats`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching device stats:", error);
@@ -173,7 +173,7 @@ export const vpnService = {
    */
   async getDeviceRealtimeStats(deviceId: string): Promise<BandwidthStats> {
     try {
-      const response = await api.get<ApiResponse<BandwidthStats>>(`/me/devices/${deviceId}/stats/realtime`);
+      const response = await api.get<ApiResponse<BandwidthStats>>(`/vpn/me/devices/${deviceId}/stats/realtime`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching realtime stats:", error);
@@ -186,7 +186,7 @@ export const vpnService = {
    */
   async getDeviceBandwidth(deviceId: string): Promise<BandwidthStats[]> {
     try {
-      const response = await api.get<ApiResponse<BandwidthStats[]>>(`/me/devices/${deviceId}/bandwidth`);
+      const response = await api.get<ApiResponse<BandwidthStats[]>>(`/vpn/me/devices/${deviceId}/bandwidth`);
       return response.data.data || [];
     } catch (error) {
       console.error("Error fetching bandwidth history:", error);
@@ -199,7 +199,7 @@ export const vpnService = {
    */
   async downloadKillSwitchScript(deviceId: string, platform: string): Promise<void> {
     try {
-      const response = await api.get(`/me/devices/${deviceId}/killswitch/${platform}`, {
+      const response = await api.get(`/vpn/me/devices/${deviceId}/killswitch/${platform}`, {
         responseType: 'blob',
       });
       
