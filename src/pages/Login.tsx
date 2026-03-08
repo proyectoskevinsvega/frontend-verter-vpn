@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { Shield, Lock, Github } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
+  const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +23,7 @@ const Login = () => {
     try {
       await login(email, password, false);
       toast.success("Bienvenido de nuevo!");
-      // window.location.href o useNavigate() a dashboard si quisieras
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Error al iniciar sesión");
     } finally {
