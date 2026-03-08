@@ -8,7 +8,7 @@ export const apiService = {
    */
   async getPlans(): Promise<Plan[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/plans`);
+      const response = await fetch(`${API_BASE_URL}/vpn/plans`);
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -25,7 +25,7 @@ export const apiService = {
    * Obtiene un plan específico por su slug.
    */
   async getPlanBySlug(slug: string): Promise<Plan> {
-    const response = await fetch(`${API_BASE_URL}/plans/slug/${slug}`);
+    const response = await fetch(`${API_BASE_URL}/vpn/plans/slug/${slug}`);
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
@@ -37,7 +37,7 @@ export const apiService = {
    */
   async getPrivacyPolicy(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/privacy`);
+      const response = await fetch(`${API_BASE_URL}/vpn/privacy`);
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -53,7 +53,7 @@ export const apiService = {
    */
   async getTermsOfService(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/terms`);
+      const response = await fetch(`${API_BASE_URL}/vpn/terms`);
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -69,7 +69,7 @@ export const apiService = {
    */
   async getContactInfo(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/contact`);
+      const response = await fetch(`${API_BASE_URL}/vpn/contact`);
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -85,7 +85,7 @@ export const apiService = {
    */
   async submitContactForm(data: { name: string; email: string; subject: string; message: string }): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/contact/submit`, {
+      const response = await fetch(`${API_BASE_URL}/vpn/contact/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -7,7 +7,7 @@ export const userService = {
    */
   async getSessions(): Promise<Session[]> {
     try {
-      const response = await api.get('/auth/sessions');
+      const response = await api.get('/vpn/auth/sessions');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching sessions:", error);
@@ -20,7 +20,7 @@ export const userService = {
    */
   async revokeSession(sessionId: string): Promise<void> {
     try {
-      await api.delete(`/auth/sessions/${sessionId}`);
+      await api.delete(`/vpn/auth/sessions/${sessionId}`);
     } catch (error) {
       console.error("Error revoking session:", error);
       throw error;
