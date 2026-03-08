@@ -1,6 +1,5 @@
 import type { Plan } from "../types/plan";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+import { api } from "./axios";
 
 export const apiService = {
   /**
@@ -8,11 +7,9 @@ export const apiService = {
    */
   async getPlans(): Promise<Plan[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vpn/plans`);
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      const data = await response.json();
+      const response = await api.get('/vpn/plans');
+      // Los datos vienen directamente en la propiedad 'data' de Axios
+      const data = response.data;
       // Ordenar por sort_order
       return (data as Plan[]).sort((a, b) => a.sort_order - b.sort_order);
     } catch (error) {
@@ -25,11 +22,8 @@ export const apiService = {
    * Obtiene un plan específico por su slug.
    */
   async getPlanBySlug(slug: string): Promise<Plan> {
-    const response = await fetch(`${API_BASE_URL}/vpn/plans/slug/${slug}`);
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-    return response.json();
+    const response = await api.get(`/vpn/plans/slug/${slug}`);
+    return response.data;
   },
 
   /**
@@ -37,11 +31,8 @@ export const apiService = {
    */
   async getPrivacyPolicy(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vpn/privacy`);
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return response.json();
+      const response = await api.get('/vpn/privacy');
+      return response.data;
     } catch (error) {
       console.error("Error fetching privacy policy:", error);
       throw error;
@@ -53,11 +44,8 @@ export const apiService = {
    */
   async getTermsOfService(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vpn/terms`);
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return response.json();
+      const response = await api.get('/vpn/terms');
+      return response.data;
     } catch (error) {
       console.error("Error fetching terms of service:", error);
       throw error;
@@ -69,11 +57,8 @@ export const apiService = {
    */
   async getContactInfo(): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vpn/contact`);
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return response.json();
+      const response = await api.get('/vpn/contact');
+      return response.data;
     } catch (error) {
       console.error("Error fetching contact info:", error);
       throw error;
@@ -85,23 +70,12 @@ export const apiService = {
    */
   async submitContactForm(data: { name: string; email: string; subject: string; message: string }): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vpn/contact/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error("Error submitting contact form:", error);
-      throw error;
+      const response = await api.post('/vpn/contact/submit', data);
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message;
+      console.error("Error submitting contact form:", errorMessage);
+      throw new Error(errorMessage);
     }
   },
 
@@ -110,24 +84,13 @@ export const apiService = {
    */
   async register(data: { name: string; email: string; password: string }): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.error?.message || result.error || "Error al registrarse");
-      }
-
-      return result;
+      const response = await api.post('/auth/register', data);
+      return response.data;
     } catch (error: any) {
-      console.error("Error during registration:", error);
-      throw error;
+      const result = error.response?.data || {};
+      const errorMessage = result.error?.message || result.error || "Error al registrarse";
+      console.error("Error during registration:", errorMessage);
+      throw new Error(errorMessage);
     }
   }
 };
