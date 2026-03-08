@@ -39,3 +39,26 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
 }
+export interface DeviceSecurity {
+  kill_switch_enabled: boolean;
+  dns_leak_protection: boolean;
+  allowed_ips: string;
+}
+
+export interface DeviceStats {
+  rx_bytes: number;
+  tx_bytes: number;
+  last_handshake: string;
+  is_online: boolean;
+}
+
+export interface BandwidthStats {
+  timestamp: string;
+  rx_kbps: number;
+  tx_kbps: number;
+}
+
+export interface KillSwitchScripts {
+  platform: 'linux' | 'windows' | 'macos';
+  content: string;
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, Server, Laptop, Trash2, Download, QrCode, PowerOff } from "lucide-react";
+import { Plus, Server, Laptop, Trash2, Download, QrCode, PowerOff, Shield, Activity, Save, X, Activity as ActivityIcon } from "lucide-react";
 import { vpnService } from "../../lib/vpnApi";
-import type { Server as VpnServer, VpnDevice, DeviceCreateRequest, QrResponseData } from "../../types/vpn";
+import type { Server as VpnServer, VpnDevice, DeviceCreateRequest, QrResponseData, DeviceSecurity, DeviceStats, BandwidthStats } from "../../types/vpn";
 import { toast } from "sonner";
 
 export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
@@ -14,6 +14,18 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [activeQrData, setActiveQrData] = useState<QrResponseData | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
+  
+  // Security Modal States
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [securityData, setSecurityData] = useState<DeviceSecurity | null>(null);
+  const [isSecurityLoading, setIsSecurityLoading] = useState(false);
+  const [isSavingSecurity, setIsSavingSecurity] = useState(false);
+
+  // Stats Modal States
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [statsData, setStatsData] = useState<DeviceStats | null>(null);
+  const [bandwidthHistory, setBandwidthHistory] = useState<BandwidthStats[]>([]);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
   
   // Create Device Form
   const [newDevice, setNewDevice] = useState<DeviceCreateRequest>({
@@ -72,7 +84,7 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
     try {
       await vpnService.deleteDevice(id);
       toast.success("Dispositivo eliminado");
-      setDevices(devices.filter(d => d.id !== id));
+      setDevices(devices.filter((d: VpnDevice) => d.id !== id));
     } catch (error) {
       toast.error("Error al eliminar el dispositivo");
     }
@@ -98,6 +110,54 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
       setShowQrModal(false);
     } finally {
       setIsQrLoading(false);
+    }
+  };
+
+  const handleShowSecurity = async (deviceId: string) => {
+    setActiveDeviceId(deviceId);
+    setShowSecurityModal(true);
+    setIsSecurityLoading(true);
+    try {
+      const data = await vpnService.getDeviceSecurity(deviceId);
+      setSecurityData(data);
+    } catch (error) {
+      toast.error("Error al obtener la configuración de seguridad");
+      setShowSecurityModal(false);
+    } finally {
+      setIsSecurityLoading(false);
+    }
+  };
+
+  const handleSaveSecurity = async () => {
+    if (!activeDeviceId || !securityData) return;
+    setIsSavingSecurity(true);
+    try {
+      await vpnService.updateDeviceSecurity(activeDeviceId, securityData);
+      toast.success("Seguridad actualizada correctamente");
+      setShowSecurityModal(false);
+    } catch (error) {
+      toast.error("Error al actualizar la seguridad");
+    } finally {
+      setIsSavingSecurity(false);
+    }
+  };
+
+  const handleShowStats = async (deviceId: string) => {
+    setActiveDeviceId(deviceId);
+    setShowStatsModal(true);
+    setIsStatsLoading(true);
+    try {
+      const [stats, bandwidth] = await Promise.all([
+        vpnService.getDeviceStats(deviceId),
+        vpnService.getDeviceBandwidth(deviceId).catch(() => [])
+      ]);
+      setStatsData(stats);
+      setBandwidthHistory(bandwidth);
+    } catch (error) {
+      toast.error("Error al obtener las estadísticas");
+      setShowStatsModal(false);
+    } finally {
+      setIsStatsLoading(false);
     }
   };
 
@@ -162,7 +222,7 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
-           {devices.map(device => (
+           {devices.map((device: VpnDevice) => (
               <div key={device.id} className={`glass p-6 rounded-3xl border ${device.connected_to ? 'border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-white/5'} flex flex-col justify-between h-full`}>
                  <div>
                     <div className="flex justify-between items-start mb-4">
@@ -193,7 +253,7 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
                        <p className="text-xs font-mono text-foreground/60 break-all"><span className="font-semibold text-foreground">PubKey:</span> {device.public_key.substring(0,25)}...</p>
                        <p className="text-xs font-mono text-foreground/60"><span className="font-semibold text-foreground">IP Privada:</span> {device.private_ip}</p>
                        {device.connected_to && (
-                          <p className="text-xs text-green-400"><span className="font-semibold text-foreground">Nodo:</span> {servers.find(s => s.id === device.connected_to)?.name || 'Activo'}</p>
+                          <p className="text-xs text-green-400"><span className="font-semibold text-foreground">Nodo:</span> {servers.find((s: VpnServer) => s.id === device.connected_to)?.name || 'Activo'}</p>
                        )}
                     </div>
                  </div>
@@ -219,6 +279,18 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
                       className="py-2.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 flex items-center justify-center gap-2 text-xs font-semibold transition border border-transparent hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
                      >
                       <QrCode className="w-4 h-4" /> Ver QR
+                    </button>
+                    <button 
+                      onClick={() => handleShowSecurity(device.id)} 
+                      className="py-2.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 flex items-center justify-center gap-2 text-xs font-semibold transition border border-transparent hover:border-white/10"
+                    >
+                      <Shield className="w-4 h-4" /> Seguridad
+                    </button>
+                    <button 
+                      onClick={() => handleShowStats(device.id)} 
+                      className="py-2.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 flex items-center justify-center gap-2 text-xs font-semibold transition border border-transparent hover:border-white/10"
+                    >
+                      <Activity className="w-4 h-4" /> Stats
                     </button>
                  </div>
               </div>
@@ -276,7 +348,7 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
              <p className="text-foreground/50 text-sm mb-6">Elige el servidor geográfico para tu túnel VPN.</p>
              
              <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                {servers.map(server => (
+                {servers.map((server: VpnServer) => (
                    <div key={server.id} 
                         onClick={() => setTargetServerId(server.id)}
                         className={`p-4 rounded-xl border cursor-pointer transition-all ${targetServerId === server.id ? 'border-primary bg-primary/10' : 'border-white/10 bg-white/5 hover:border-white/20'}`}>
@@ -330,6 +402,143 @@ export const VpnDevices = ({ planLimit }: { planLimit: number }) => {
                <button onClick={() => setShowQrModal(false)} className="w-full py-3 bg-white/10 text-foreground font-bold rounded-xl hover:bg-white/20 transition">Cerrar</button>
             </div>
          </div>
+      )}
+
+      {/* Security Modal */}
+      {showSecurityModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass p-8 rounded-3xl border border-white/10 w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+                <Shield className="text-primary w-6 h-6" /> Seguridad
+              </h3>
+              <button onClick={() => setShowSecurityModal(false)} className="p-2 hover:bg-white/5 rounded-lg text-foreground/50 hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isSecurityLoading ? (
+              <div className="py-12 flex justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div></div>
+            ) : securityData && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <div>
+                    <p className="font-semibold text-foreground">Kill Switch</p>
+                    <p className="text-xs text-foreground/50">Bloquea internet si la VPN cae</p>
+                  </div>
+                  <button 
+                    onClick={() => setSecurityData({...securityData, kill_switch_enabled: !securityData.kill_switch_enabled})}
+                    className={`w-12 h-6 rounded-full relative transition-colors ${securityData.kill_switch_enabled ? 'bg-primary' : 'bg-white/10'}`}
+                  >
+                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${securityData.kill_switch_enabled ? 'translate-x-6' : ''}`}></div>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <div>
+                    <p className="font-semibold text-foreground">DNS Leak Protection</p>
+                    <p className="text-xs text-foreground/50">Previene fugas de consultas DNS</p>
+                  </div>
+                  <button 
+                    onClick={() => setSecurityData({...securityData, dns_leak_protection: !securityData.dns_leak_protection})}
+                    className={`w-12 h-6 rounded-full relative transition-colors ${securityData.dns_leak_protection ? 'bg-primary' : 'bg-white/10'}`}
+                  >
+                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${securityData.dns_leak_protection ? 'translate-x-6' : ''}`}></div>
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Allowed IPs</label>
+                  <textarea 
+                    value={securityData.allowed_ips} 
+                    onChange={e => setSecurityData({...securityData, allowed_ips: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-foreground font-mono text-sm h-24 outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <p className="text-[10px] text-foreground/40 mt-1">Default: 0.0.0.0/0, ::/0 (Ruta por defecto)</p>
+                </div>
+
+                <button 
+                  onClick={handleSaveSecurity}
+                  disabled={isSavingSecurity}
+                  className="w-full py-3 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition shadow-lg shadow-primary/25 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" /> {isSavingSecurity ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+
+                <div className="pt-4 border-t border-white/10">
+                   <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <Download className="w-4 h-4 text-primary" /> Scripts de Kill Switch
+                   </p>
+                   <div className="grid grid-cols-2 gap-2">
+                      {['linux', 'windows', 'macos', 'linux-undo', 'windows-undo', 'macos-undo'].map((plat) => (
+                         <button 
+                            key={plat}
+                            onClick={() => vpnService.downloadKillSwitchScript(activeDeviceId, plat)}
+                            className="text-[10px] py-2 px-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-foreground/70 hover:text-foreground transition-colors uppercase truncate"
+                         >
+                            {plat.replace('-', ' ')}
+                         </button>
+                      ))}
+                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Stats Modal */}
+      {showStatsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass p-8 rounded-3xl border border-white/10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+                <ActivityIcon className="text-primary w-6 h-6" /> Estadísticas
+              </h3>
+              <button onClick={() => setShowStatsModal(false)} className="p-2 hover:bg-white/5 rounded-lg text-foreground/50 hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isStatsLoading ? (
+              <div className="py-12 flex justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div></div>
+            ) : statsData && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <p className="text-xs text-foreground/50 uppercase font-bold tracking-wider mb-1">Recibido (RX)</p>
+                    <p className="text-xl font-bold text-foreground">{(statsData.rx_bytes / (1024 * 1024)).toFixed(2)} MB</p>
+                  </div>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <p className="text-xs text-foreground/50 uppercase font-bold tracking-wider mb-1">Enviado (TX)</p>
+                    <p className="text-xl font-bold text-foreground">{(statsData.tx_bytes / (1024 * 1024)).toFixed(2)} MB</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                    <div className={`w-2 h-2 rounded-full ${statsData.is_online ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    Estado del Enlace: {statsData.is_online ? 'En Línea' : 'Desconectado'}
+                  </p>
+                  <p className="text-xs text-foreground/50">Último apretón de manos (handshake): {new Date(statsData.last_handshake).toLocaleString()}</p>
+                </div>
+
+                {/* Simplified Bandwidth Chart Placeholder */}
+                <div className="h-32 w-full bg-white/5 border border-white/10 rounded-2xl flex items-end justify-between p-4 gap-1 overflow-hidden">
+                   {bandwidthHistory.length > 0 ? bandwidthHistory.slice(-20).map((h: BandwidthStats, i: number) => (
+                      <div key={i} className="flex-1 bg-primary/20 rounded-t-sm" style={{ height: `${Math.min(100, (h.rx_kbps + h.tx_kbps) / 10)}%` }}>
+                         <div className="w-full h-1/2 bg-primary rounded-t-sm"></div>
+                      </div>
+                   )) : (
+                     <div className="w-full h-full flex items-center justify-center text-xs text-foreground/20 italic">Historico de ancho de banda no disponible</div>
+                   )}
+                </div>
+                
+                <p className="text-[10px] text-center text-foreground/30 italic">Las estadísticas se actualizan automáticamente cada 60 segundos.</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
     </div>
