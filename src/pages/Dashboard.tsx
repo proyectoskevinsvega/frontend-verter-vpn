@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { userService, subscriptionService } from "../lib/dashboardApi";
 import type { Session, SubscriptionSummary, Plan } from "../types/dashboard";
 import { toast } from "sonner";
+import { VpnDevices } from "../components/dashboard/VpnDevices";
 
 const Dashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [activeTab, setActiveTab] = useState<'overview' | 'vpn'>('overview');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -90,9 +92,27 @@ const Dashboard = () => {
           </div>
         </header>
 
+        <div className="flex border-b border-white/10 mb-6 space-x-8">
+          <button 
+             onClick={() => setActiveTab('overview')} 
+             className={`pb-4 font-semibold text-sm transition-colors relative ${activeTab === 'overview' ? 'text-primary' : 'text-foreground/50 hover:text-foreground'}`}
+          >
+             Resumen del Servicio
+             {activeTab === 'overview' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+          </button>
+          <button 
+             onClick={() => setActiveTab('vpn')} 
+             className={`pb-4 font-semibold text-sm transition-colors relative ${activeTab === 'vpn' ? 'text-primary' : 'text-foreground/50 hover:text-foreground'}`}
+          >
+             Mis Dispositivos (VPN)
+             {activeTab === 'vpn' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+          </button>
+        </div>
+
         {/* Panel Content */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="glass p-8 rounded-4xl border border-white/5 md:col-span-2 space-y-6">
+        {activeTab === 'overview' ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="glass p-8 rounded-4xl border border-white/5 md:col-span-2 space-y-6">
             <h2 className="text-2xl font-display font-bold text-foreground flexItems-center gap-2">
               <ShieldCheck className="w-6 h-6 text-primary inline-block mr-2" />
               Bienvenido al Panel de Control
@@ -217,7 +237,7 @@ const Dashboard = () => {
              <hr className="w-full border-white/10" />
              
              <div className="w-full space-y-3">
-               <button className="w-full py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shadow-lg shadow-primary/25">
+               <button onClick={() => setActiveTab('vpn')} className="w-full py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shadow-lg shadow-primary/25">
                  Gestionar VPN
                </button>
                <button className="w-full py-3 px-4 border border-white/10 text-sm font-semibold rounded-xl text-foreground hover:bg-white/5 transition-all">
@@ -226,6 +246,9 @@ const Dashboard = () => {
              </div>
           </div>
         </div>
+        ) : (
+           <VpnDevices planLimit={plan?.max_devices || 0} />
+        )}
       </div>
     </div>
   );
