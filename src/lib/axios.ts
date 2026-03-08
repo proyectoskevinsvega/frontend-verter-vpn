@@ -81,7 +81,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Optional: If backend supports a /auth/refresh endpoint via cookie, we can attempt a transparent retry here.
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login') {
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && !originalRequest.url?.includes('/auth/refresh')) {
       originalRequest._retry = true;
       try {
         await api.post('/auth/refresh', {});
