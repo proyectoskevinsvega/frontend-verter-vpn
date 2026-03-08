@@ -98,14 +98,14 @@ const Dashboard = () => {
              className={`pb-4 font-semibold text-sm transition-colors relative ${activeTab === 'overview' ? 'text-primary' : 'text-foreground/50 hover:text-foreground'}`}
           >
              Resumen del Servicio
-             {activeTab === 'overview' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+             {activeTab === 'overview' && <div className="absolute -bottom-px left-0 w-full h-0.5 bg-primary"></div>}
           </button>
           <button 
              onClick={() => setActiveTab('vpn')} 
              className={`pb-4 font-semibold text-sm transition-colors relative ${activeTab === 'vpn' ? 'text-primary' : 'text-foreground/50 hover:text-foreground'}`}
           >
              Mis Dispositivos (VPN)
-             {activeTab === 'vpn' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+             {activeTab === 'vpn' && <div className="absolute -bottom-px left-0 w-full h-0.5 bg-primary"></div>}
           </button>
         </div>
 
