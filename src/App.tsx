@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import MainLayout from "./components/layout/MainLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -17,10 +18,11 @@ import { Toaster } from "sonner";
 
 function App() {
   return (
-    <Router>
-      <ScrollToHash />
-      <Toaster position="top-right" richColors closeButton />
-      <Routes>
+    <AuthProvider>
+      <Router>
+        <ScrollToHash />
+        <Toaster position="top-right" richColors closeButton />
+        <Routes>
         <Route 
           path="/" 
           element={
@@ -96,8 +98,9 @@ function App() {
             </MainLayout>
           } 
         />
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

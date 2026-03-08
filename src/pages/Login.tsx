@@ -1,8 +1,35 @@
 import { motion } from "framer-motion";
 import { Shield, Lock, Github } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("Por favor completa los campos");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login(email, password, false);
+      toast.success("Bienvenido de nuevo!");
+      // window.location.href o useNavigate() a dashboard si quisieras
+    } catch (error: any) {
+      toast.error(error.message || "Error al iniciar sesión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Decor */}
@@ -31,7 +58,7 @@ const Login = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="grid md:grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-foreground/70 mb-2 ml-1">Email o Usuario</label>
@@ -39,6 +66,8 @@ const Login = () => {
                 <input
                   type="text"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="block w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-foreground placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all"
                   placeholder="usuario@email.com o username"
                 />
@@ -50,6 +79,8 @@ const Login = () => {
                 <input
                   type="password"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="block w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-foreground placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
@@ -77,12 +108,13 @@ const Login = () => {
 
           <button
             type="submit"
-            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-2xl text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shadow-lg shadow-primary/25"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-2xl text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shadow-lg shadow-primary/25 disabled:opacity-50"
           >
             <span className="absolute left-0 inset-y-0 flex items-center pl-3">
               <Lock className="h-5 w-5 text-primary-foreground/50 group-hover:text-primary-foreground transition-colors" aria-hidden="true" />
             </span>
-            Entrar a mi Cuenta
+            {loading ? "Iniciando sesión..." : "Entrar a mi Cuenta"}
           </button>
 
           <div className="relative my-8">

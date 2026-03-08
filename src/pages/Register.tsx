@@ -1,13 +1,14 @@
 import { motion } from "framer-motion";
 import { Shield, Lock, Github, User, Mail } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
-import { apiService } from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const Register = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,17 +31,13 @@ const Register = () => {
 
     setLoading(true);
     try {
-      await apiService.register({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
+      await register(formData.name, formData.email, formData.password);
       
       toast.success("Cuenta creada exitosamente", {
         description: "Por favor, verifica tu correo electrónico para continuar.",
       });
       
-      navigate("/verify-email");
+      // La redirección a /verify-email ya se hace dentro de AuthContext
     } catch (error: any) {
       toast.error(error.message || "Error al crear la cuenta");
     } finally {
