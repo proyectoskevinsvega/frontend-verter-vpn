@@ -1,4 +1,5 @@
-import axios from 'axios';
+/// <reference types="vite/client" />
+import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
 // Construct API URL from environment variables
 const API_URL = import.meta.env.VITE_API_BASE_URL || 
@@ -50,7 +51,7 @@ export const fetchCsrfToken = async (): Promise<string> => {
 
 // Request Interceptor: Attach CSRF Token to mutating requests
 api.interceptors.request.use(
-  async (config) => {
+  async (config: InternalAxiosRequestConfig) => {
     const isMutatingRequest = ['post', 'put', 'patch', 'delete'].includes(
       config.method?.toLowerCase() || ''
     );
@@ -69,7 +70,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 );
 
 let isRefreshing = false;
@@ -88,11 +89,11 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response Interceptor: Handle 401 Unauthorized with Token Refresh Queueing
 api.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Handle 401 errors, but exclude login and the refresh request itself to avoid loops
     if (
@@ -134,7 +135,8 @@ api.interceptors.response.use(
     }
 
     // Force CSRF refresh if the token was invalid
-    if (error.response?.status === 403 && error.response?.data?.error === 'invalid csrf token') {
+    const responseData = error.response?.data as any;
+    if (error.response?.status === 403 && responseData?.error === 'invalid csrf token') {
       csrfToken = null;
     }
 
