@@ -159,7 +159,13 @@ const Dashboard = () => {
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-2xl font-bold text-foreground">{plan.name}</p>
-                      <p className="text-sm text-foreground/50">{subscription.status === 'active' ? 'Activa' : subscription.status}</p>
+                      <p className="text-sm text-foreground/50">
+                        {subscription.status === 'active' ? 'Activa' : 
+                         subscription.status === 'trial' ? 'Prueba' :
+                         subscription.status === 'expired' ? 'Expirada' :
+                         subscription.status === 'cancelled' ? 'Cancelada' :
+                         subscription.status}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-primary">${plan.price_monthly}</p>
@@ -169,7 +175,11 @@ const Dashboard = () => {
                   <div className="pt-4 border-t border-white/10 grid grid-cols-2 gap-4 text-sm text-foreground/70">
                     <div>
                       <p className="font-semibold mb-1">Renovación:</p>
-                      <p>{new Date(subscription.current_period_end).toLocaleDateString()}</p>
+                      <p>
+                        {subscription.subscription?.end_date 
+                          ? new Date(subscription.subscription.end_date).toLocaleDateString() 
+                          : 'Sin vencimiento'}
+                      </p>
                     </div>
                     <div>
                       <p className="font-semibold mb-1">Dispositivos Límite:</p>

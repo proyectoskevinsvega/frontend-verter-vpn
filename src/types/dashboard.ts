@@ -8,11 +8,26 @@ export interface Session {
   created_at: string;
 }
 
+export interface BackendSubscription {
+  id: string;
+  status: string;
+  start_date: string;
+  end_date: string | null;
+  next_billing_date: string | null;
+  auto_renew: boolean;
+}
+
 export interface SubscriptionSummary {
-  plan_name: string;
-  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete';
-  current_period_end: string;
-  cancel_at_period_end: boolean;
+  has_active_subscription: boolean;
+  status: 'active' | 'cancelled' | 'expired' | 'paused' | 'trial' | 'pending';
+  subscription?: BackendSubscription;
+  current_plan?: Plan;
+  days_remaining: number;
+  is_expiring_soon: boolean;
+  clients_used: number;
+  clients_limit: number;
+  bandwidth_used: number;
+  bandwidth_limit: number;
 }
 
 export interface Plan {
