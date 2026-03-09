@@ -23,7 +23,7 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/20 animate-pulse">
+        <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/20 animate-pulse">
           <Shield className="w-8 h-8" />
         </div>
         <div className="flex gap-1.5">
