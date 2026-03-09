@@ -9,7 +9,7 @@ export const vpnService = {
   async getServers(): Promise<Server[]> {
     try {
       const response = await api.get('/vpn/me/servers');
-      return response.data || [];
+      return response.data?.data || [];
     } catch (error) {
       console.error("Error fetching servers:", error);
       throw error;
@@ -36,7 +36,7 @@ export const vpnService = {
   async getDevices(): Promise<VpnDevice[]> {
     try {
       const response = await api.get('/vpn/me/devices');
-      return response.data || [];
+      return response.data?.data || [];
     } catch (error) {
       console.error("Error fetching devices:", error);
       throw error;
